@@ -1,4 +1,4 @@
-// package com.myorg;
+package com.myorg;// package com.myorg;
 
 // import software.amazon.awscdk.App;
 // import software.amazon.awscdk.assertions.Template;
