@@ -32,6 +32,7 @@ jobs:
           region: ${{ secrets.AWS_REGION }}
           repo: ${{ secrets.ECR_REPOSITORY }}
           dockerfile: ./wd-backend/Dockerfile
+          path: ./wd-backend
           tags: latest
 
       - name: Deploy to EC2
