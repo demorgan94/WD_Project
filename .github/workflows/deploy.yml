@@ -43,6 +43,17 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           port: 22
           script: |
+            # Install Docker if it is not already installed
+            if ! command -v docker &> /dev/null
+            then
+              sudo yum update -y
+              sudo amazon-linux-extras install docker -y
+              sudo service docker start
+              sudo usermod -a -G docker ec2-user
+            fi
+            
+            # Login to ECR and pull the latest Docker image
+            aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin ${{ secrets.ECR_REPOSITORY_URI }}
             docker pull ${{ secrets.ECR_REPOSITORY_URI }}/${{ secrets.ECR_REPOSITORY }}:latest
             docker stop $(docker ps -q --filter ancestor=${{ secrets.ECR_REPOSITORY_URI }}/${{ secrets.ECR_REPOSITORY }}:latest) || true
             docker run -d -p 8080:8080 ${{ secrets.ECR_REPOSITORY_URI }}/${{ secrets.ECR_REPOSITORY }}:latest
