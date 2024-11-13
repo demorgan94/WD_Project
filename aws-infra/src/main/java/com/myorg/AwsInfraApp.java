@@ -1,6 +1,7 @@
 package com.myorg;
 
 import software.amazon.awscdk.App;
+import software.amazon.awscdk.Aws;
 import software.amazon.awscdk.Environment;
 import software.amazon.awscdk.StackProps;
 
@@ -10,8 +11,8 @@ public class AwsInfraApp {
 
         new AwsInfraStack(app, "AwsInfraStack", StackProps.builder()
                 .env(Environment.builder()
-                        .account("208390502676")
-                        .region("us-east-1")
+                        .account(Aws.ACCOUNT_ID)
+                        .region(Aws.REGION)
                         .build())
                 .build());
 
