@@ -22,8 +22,8 @@ you will end up with a CloudFormation template but with the power of a programmi
 ### How to use
 First, make sure you have the CDK CLI installed and configured.
 
-Make sure you have Node.js installed (Yeah, AWS CDK is written in JavaScript but don't worry, that means it comes as 
-an easy to install NPM package).
+Make sure you have Node.js installed (Yeah, the first language supported by CDK was TypeScript but don't worry, 
+that means it comes as an easy to install NPM package).
 
 - https://nodejs.org/en/download/package-manager/
 
