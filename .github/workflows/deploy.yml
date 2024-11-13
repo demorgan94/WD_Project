@@ -6,14 +6,13 @@ on:
       - main
 
 jobs:
-  build:
+  deploy:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Set up JDK 21
+      - name: Set up Java JDK 21 with Corretto
         uses: actions/setup-java@v3
         with:
           java-version: '21'
@@ -24,49 +23,42 @@ jobs:
           cd wd-backend
           ./gradlew clean build
 
-      - name: Set up AWS credentials
+      - name: Set up AWS
         uses: aws-actions/configure-aws-credentials@v1
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
+      - name: Set up Docker
+        uses: actions/setup-docker@v2
 
-      - name: Log in to Amazon ECR
-        uses: aws-actions/amazon-ecr-login@v1
+      - name: Login to ECR
+        uses: aws-actions/login-to-ecr@v1
         with:
           mask-password: true
-          region: ${{ secrets.AWS_REGION }}
+          registry-id: ${{ secrets.ECR_REGISTRY_ID }}
+          aws-region: ${{  secrets.AWS_REGION }}
 
       - name: Build Docker image
         run: |
-          docker build -f wd-backend/Dockerfile -t ${{ secrets.ECR_REPOSITORY }} wd-backend
+          cd wd-backend
+          docker build -t ${{ secrets.ECR_REPOSITORY }} .
 
       - name: Tag Docker image
         run: |
           docker tag ${{ secrets.ECR_REPOSITORY }}:latest ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.ECR_REPOSITORY }}:latest
 
       - name: Push Docker image to ECR
-        run: |
-          docker push ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.ECR_REPOSITORY }}:latest
-
-      - name: Setup SSH Key
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_ed25519
-          chmod 600 ~/.ssh/id_ed25519
-
-          # Optionally, add the SSH host key verification step
-          ssh-keyscan -t ed25519 ${{ secrets.EC2_PUBLIC_DNS }} >> ~/.ssh/known_hosts
-        env:
-          EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
-          EC2_PUBLIC_IP: ${{ secrets.EC2_PUBLIC_IP }}
+        uses: aws-actions/push-to-ecr@v1
+        with:
+          registry-id: ${{ secrets.AWS_ACCOUNT_ID }}
+          aws-region: ${{ secrets.AWS_REGION }}
+          image-tag: latest
 
       - name: Deploy to EC2
-        run: |
-          ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_ed25519 ec2-user@${{ secrets.EC2_PUBLIC_IP }} -T << 'EOF'
-            docker pull ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.ECR_REPOSITORY }}:latest
-            docker run -d -p 8080:8080 ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.ECR_REPOSITORY }}:latest
-          EOF
+        uses: aws-actions/deploy-to-ec2@v1
+        with:
+          aws-region: 'us-west-2'
+          instance-id: ${{ secrets.EC2_INSTANCE_ID }}
+          docker-image: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.ECR_REPOSITORY }}:latest
