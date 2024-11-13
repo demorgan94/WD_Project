@@ -58,12 +58,20 @@ public class AwsInfraStack extends Stack {
                 .machineImage(MachineImage.latestAmazonLinux2()) // Free tier eligible
                 .securityGroup(ec2SecurityGroup)
                 .keyPair(KeyPair.fromKeyPairName(this, "WDEc2KeyPair", "wd-ec2-key-pair"))
+                .associatePublicIpAddress(true)
+                .vpcSubnets(SubnetSelection.builder().subnetType(SubnetType.PUBLIC).build())
                 .build();
 
         // Output the EC2 instance's public DNS
         CfnOutput.Builder.create(this, "WDEc2InstancePublicDns")
                 .value(ec2Instance.getInstancePublicDnsName())
                 .description("Public DNS of the EC2 instance")
+                .build();
+
+        // Output the EC2 instance's public IP
+        CfnOutput.Builder.create(this, "WDEc2InstancePublicIp")
+                .value(ec2Instance.getInstancePublicIp())
+                .description("Public IP of the EC2 instance")
                 .build();
 
         // Create an ECR repository
