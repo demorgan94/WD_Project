@@ -16,6 +16,7 @@ import software.amazon.awscdk.services.ec2.Port;
 import software.amazon.awscdk.services.ec2.SecurityGroup;
 import software.amazon.awscdk.services.ec2.SubnetSelection;
 import software.amazon.awscdk.services.ec2.SubnetType;
+import software.amazon.awscdk.services.ec2.UserData;
 import software.amazon.awscdk.services.ec2.Vpc;
 import software.amazon.awscdk.services.ecr.Repository;
 import software.amazon.awscdk.services.iam.Effect;
@@ -60,6 +61,11 @@ public class AwsInfraStack extends Stack {
                 .keyPair(KeyPair.fromKeyPairName(this, "WDEc2KeyPair", "wd-ec2-key-pair"))
                 .associatePublicIpAddress(true)
                 .vpcSubnets(SubnetSelection.builder().subnetType(SubnetType.PUBLIC).build())
+                .userData(UserData.custom("#!/bin/bash\n" +
+                        "yum update -y\n" +
+                        "yum install -y docker\n" +
+                        "service docker start\n" +
+                        "usermod -a -G docker ec2-user"))
                 .build();
 
         // Output the EC2 instance's public DNS
