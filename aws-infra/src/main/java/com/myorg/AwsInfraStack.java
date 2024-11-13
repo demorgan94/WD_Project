@@ -1,6 +1,5 @@
 package com.myorg;
 
-import software.amazon.awscdk.Aws;
 import software.amazon.awscdk.CfnOutput;
 import software.amazon.awscdk.RemovalPolicy;
 import software.amazon.awscdk.Stack;
@@ -16,10 +15,11 @@ import software.amazon.awscdk.services.ec2.Port;
 import software.amazon.awscdk.services.ec2.SecurityGroup;
 import software.amazon.awscdk.services.ec2.SubnetSelection;
 import software.amazon.awscdk.services.ec2.SubnetType;
-import software.amazon.awscdk.services.ec2.UserData;
 import software.amazon.awscdk.services.ec2.Vpc;
+import software.amazon.awscdk.services.ecr.LifecycleRule;
 import software.amazon.awscdk.services.ecr.Repository;
 import software.amazon.awscdk.services.iam.Effect;
+import software.amazon.awscdk.services.iam.ManagedPolicy;
 import software.amazon.awscdk.services.iam.PolicyStatement;
 import software.amazon.awscdk.services.iam.Role;
 import software.amazon.awscdk.services.iam.ServicePrincipal;
@@ -44,6 +44,25 @@ public class AwsInfraStack extends Stack {
                 .maxAzs(2)
                 .build();
 
+        // Create an ECR repository
+        Repository ecrRepository = Repository.Builder.create(this, "WDEcrRepository")
+                .repositoryName("wd-backend-repository")
+                .removalPolicy(RemovalPolicy.DESTROY)  // Deletes the repository when the stack is destroyed (optional)
+                .build();
+
+        // Define ECR lifecycle policy
+        ecrRepository.addLifecycleRule(LifecycleRule.builder()
+                .rulePriority(1)
+                .description("Retain last 5 images")
+                .maxImageCount(5)  // Retain the last 5 images
+                .build());
+
+        // Output the ECR repository URI
+        CfnOutput.Builder.create(this, "WDBackendEcrRepoUri")
+                .value(ecrRepository.getRepositoryUri())
+                .description("URI of backend ECR repository")
+                .build();
+
         // Define Security Group for the EC2 instance to allow SSH and HTTP access
         SecurityGroup ec2SecurityGroup = SecurityGroup.Builder.create(this, "WDEc2SecurityGroup")
                 .vpc(vpc)
@@ -52,20 +71,32 @@ public class AwsInfraStack extends Stack {
         ec2SecurityGroup.addIngressRule(Peer.anyIpv4(), Port.tcp(22), "Allow SSH");
         ec2SecurityGroup.addIngressRule(Peer.anyIpv4(), Port.tcp(80), "Allow HTTP");
 
+        // Create IAM Role for EC2 instance
+        Role ec2Role = Role.Builder.create(this, "WDEc2InstanceRole")
+                .assumedBy(new ServicePrincipal("ec2.amazonaws.com"))
+                .managedPolicies(List.of(
+                        ManagedPolicy.fromAwsManagedPolicyName("AmazonEC2FullAccess"),
+                        ManagedPolicy.fromAwsManagedPolicyName("AmazonS3ReadOnlyAccess")
+                ))
+                .build();
+
+        // Attach policy to allow pulling images from ECR
+        ec2Role.addToPolicy(PolicyStatement.Builder.create()
+                .actions(List.of("ecr:GetAuthorizationToken", "ecr:BatchGetImage", "ecr:GetDownloadUrlForLayer"))
+                .resources(List.of(ecrRepository.getRepositoryArn()))
+                .effect(Effect.ALLOW)
+                .build());
+
         // EC2 instance setup for Docker
         Instance ec2Instance = Instance.Builder.create(this, "WDEc2Instance")
                 .vpc(vpc)
                 .instanceType(InstanceType.of(InstanceClass.BURSTABLE2, InstanceSize.MICRO)) // Free tier eligible
                 .machineImage(MachineImage.latestAmazonLinux2()) // Free tier eligible
                 .securityGroup(ec2SecurityGroup)
+                .role(ec2Role)
                 .keyPair(KeyPair.fromKeyPairName(this, "WDEc2KeyPair", "wd-ec2-key-pair"))
                 .associatePublicIpAddress(true)
                 .vpcSubnets(SubnetSelection.builder().subnetType(SubnetType.PUBLIC).build())
-                .userData(UserData.custom("#!/bin/bash\n" +
-                        "yum update -y\n" +
-                        "yum install -y docker\n" +
-                        "service docker start\n" +
-                        "usermod -a -G docker ec2-user"))
                 .build();
 
         // Output the EC2 instance's public DNS
@@ -78,30 +109,6 @@ public class AwsInfraStack extends Stack {
         CfnOutput.Builder.create(this, "WDEc2InstancePublicIp")
                 .value(ec2Instance.getInstancePublicIp())
                 .description("Public IP of the EC2 instance")
-                .build();
-
-        // Create an ECR repository
-        Repository ecrRepository = Repository.Builder.create(this, "WDEcrRepository")
-                .repositoryName("wd-backend-repository")
-                .removalPolicy(RemovalPolicy.DESTROY)  // Deletes the repository when the stack is destroyed (optional)
-                .build();
-
-        // Create IAM Role for EC2 instance (or your CI/CD pipeline)
-        Role ec2Role = Role.Builder.create(this, "EC2InstanceRole")
-                .assumedBy(new ServicePrincipal("ec2.amazonaws.com"))
-                .build();
-
-        // Attach policy to allow pulling images from ECR
-        ec2Role.addToPolicy(PolicyStatement.Builder.create()
-                .actions(List.of("ecr:GetAuthorizationToken", "ecr:BatchGetImage", "ecr:GetDownloadUrlForLayer"))
-                .resources(List.of("arn:aws:ecr:" + Aws.REGION + ":" + Aws.ACCOUNT_ID + ":repository/wd-backend-repository"))
-                .effect(Effect.ALLOW)
-                .build());
-
-        // Output the ECR repository URI
-        CfnOutput.Builder.create(this, "WDBackendEcrRepoUri")
-                .value(ecrRepository.getRepositoryUri())
-                .description("URI of backend ECR repository")
                 .build();
 
         // Define Security Group for the RDS instance to allow MySQL connections from the EC2 instance
@@ -126,6 +133,7 @@ public class AwsInfraStack extends Stack {
                 .credentials(Credentials.fromGeneratedSecret("dbAdmin"))  // Auto-generate a password
                 .databaseName("wddb")
                 .publiclyAccessible(false)  // Only accessible from within VPC (for security)
+                .instanceIdentifier("wd-rds-instance")
                 .build();
 
         // Output the RDS instance endpoint
