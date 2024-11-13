@@ -5,7 +5,6 @@ import software.amazon.awscdk.CfnOutput;
 import software.amazon.awscdk.RemovalPolicy;
 import software.amazon.awscdk.Stack;
 import software.amazon.awscdk.StackProps;
-import software.amazon.awscdk.services.ec2.IKeyPair;
 import software.amazon.awscdk.services.ec2.Instance;
 import software.amazon.awscdk.services.ec2.InstanceClass;
 import software.amazon.awscdk.services.ec2.InstanceSize;
@@ -52,18 +51,13 @@ public class AwsInfraStack extends Stack {
         ec2SecurityGroup.addIngressRule(Peer.anyIpv4(), Port.tcp(22), "Allow SSH");
         ec2SecurityGroup.addIngressRule(Peer.anyIpv4(), Port.tcp(80), "Allow HTTP");
 
-        // Create a new key pair to connect to the EC2 instance via SSH
-        IKeyPair keyPair = KeyPair.Builder.create(this, "WDKeyPair")
-                .keyPairName("wd-ec2-key-pair")
-                .build();
-
         // EC2 instance setup for Docker
         Instance ec2Instance = Instance.Builder.create(this, "WDEc2Instance")
                 .vpc(vpc)
                 .instanceType(InstanceType.of(InstanceClass.BURSTABLE2, InstanceSize.MICRO)) // Free tier eligible
                 .machineImage(MachineImage.latestAmazonLinux2()) // Free tier eligible
                 .securityGroup(ec2SecurityGroup)
-                .keyPair(keyPair)
+                .keyPair(KeyPair.fromKeyPairName(this, "WDEc2KeyPair", "wd-ec2-key-pair"))
                 .build();
 
         // Output the EC2 instance's public DNS
