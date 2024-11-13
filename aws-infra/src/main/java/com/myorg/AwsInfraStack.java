@@ -76,6 +76,7 @@ public class AwsInfraStack extends Stack {
                 .assumedBy(new ServicePrincipal("ec2.amazonaws.com"))
                 .managedPolicies(List.of(
                         ManagedPolicy.fromAwsManagedPolicyName("AmazonEC2FullAccess"),
+                        ManagedPolicy.fromAwsManagedPolicyName("AmazonEC2ContainerRegistryReadOnly"),
                         ManagedPolicy.fromAwsManagedPolicyName("AmazonS3ReadOnlyAccess")
                 ))
                 .build();
