@@ -114,7 +114,7 @@ jobs:
               docker pull ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.ECR_REPOSITORY }}:latest
             
               # Run the Docker image
-              docker run -d -p 8080:8080 \
+              docker run -d -p 80:8080 \
                 -e RDS_URL=${{ secrets.RDS_URL }} \
                 -e RDS_USERNAME=${{ secrets.RDS_USERNAME }} \
                 -e RDS_PASS=${{ secrets.RDS_PASS }} \
