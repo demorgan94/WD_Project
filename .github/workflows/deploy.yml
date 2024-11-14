@@ -72,7 +72,13 @@ jobs:
               docker pull ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.ECR_REPOSITORY }}:latest
             
               # Stop and remove any existing containers
-              docker stop $(docker ps -q --filter ancestor=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.ECR_REPOSITORY }}:latest) || true
+              CONTAINER_ID=$(docker ps -q --filter ancestor=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.ECR_REPOSITORY }}:latest)
+              # Stop container(s) if any were found
+              if [ -n "$CONTAINER_ID" ]; then
+                docker stop $CONTAINER_ID
+              else
+                echo "No running containers found for the specified image."
+              fi
             
               # Run the Docker image
               docker run -d -p 8080:8080 ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.ECR_REPOSITORY }}:latest
