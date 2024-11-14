@@ -23,7 +23,7 @@ jobs:
           cd wd-backend
           ./gradlew clean build
 
-      - name: Build & Push Docker Image 🐳
+      - name: Build & Push Docker Image
         uses: docker://ghcr.io/kciter/aws-ecr-action:latest
         with:
           access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -49,6 +49,40 @@ jobs:
             # Add the EC2 host to known hosts
             ssh-keyscan -H ${{ secrets.EC2_PUBLIC_IP }} >> ~/.ssh/known_hosts
 
+      - name: Set up Docker on EC2 (If needed)
+        uses: appleboy/ssh-action@v0.1.6
+        with:
+          host: ${{ secrets.EC2_PUBLIC_IP }}
+          username: ec2-user
+          key: ${{ secrets.EC2_SSH_KEY }}
+          port: 22
+          script: |
+            ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ec2-user@${{ secrets.EC2_PUBLIC_IP }} << 'EOF'
+              if ! command -v docker &> /dev/null
+              then
+                sudo yum update -y
+                sudo amazon-linux-extras install docker
+                sudo service docker start
+                sudo usermod -aG docker ec2-user
+              fi
+            EOF
+
+      - name: Stop existing Docker containers
+        uses: appleboy/ssh-action@v0.1.6
+        with:
+          host: ${{ secrets.EC2_PUBLIC_IP }}
+          username: ec2-user
+          key: ${{ secrets.EC2_SSH_KEY }}
+          port: 22
+          script: |
+            ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ec2-user@${{ secrets.EC2_PUBLIC_IP }} << 'EOF'
+              # Stop and remove any existing containers
+              docker stop $(docker ps -q) || true
+            
+              # Remove all stopped containers
+              docker rm $(docker ps -a -q) || true
+            EOF
+
       - name: Deploy to EC2
         uses: appleboy/ssh-action@v0.1.6
         with:
@@ -59,26 +93,11 @@ jobs:
           script: |
             # Install Docker if it is not already installed
             ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ec2-user@${{ secrets.EC2_PUBLIC_IP }} << 'EOF'
-              sudo yum update -y
-              sudo amazon-linux-extras install docker
-              sudo service docker start
-              sudo usermod -aG docker ec2-user
-              docker --version
-            
               # Login to ECR and pull the latest Docker image
               aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
             
               # Pull the latest Docker image
               docker pull ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.ECR_REPOSITORY }}:latest
-            
-              # Stop and remove any existing containers
-              CONTAINER_ID=$(docker ps -q --filter ancestor=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.ECR_REPOSITORY }}:latest)
-              # Stop container(s) if any were found
-              if [ -n "$CONTAINER_ID" ]; then
-                docker stop $CONTAINER_ID
-              else
-                echo "No running containers found for the specified image."
-              fi
             
               # Run the Docker image
               docker run -d -p 8080:8080 ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.ECR_REPOSITORY }}:latest
