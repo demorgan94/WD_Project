@@ -117,6 +117,6 @@ jobs:
               docker run -d -p 8080:8080 \
                 -e RDS_URL=${{ secrets.RDS_URL }} \
                 -e RDS_USERNAME=${{ secrets.RDS_USERNAME }} \
-                -e RDS_PASSWORD=${{ secrets.RDS_PASSWORD }} \
+                -e RDS_PASSWORD=${{ secrets.RDS_PASS }} \
                 ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.ECR_REPOSITORY }}:latest
             EOF
