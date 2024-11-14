@@ -100,6 +100,11 @@ public class AwsInfraStack extends Stack {
                 .vpcSubnets(SubnetSelection.builder().subnetType(SubnetType.PUBLIC).build())
                 .build();
 
+        ec2Instance.addUserData("sudo yum update -y");
+        ec2Instance.addUserData("sudo yum install -y docker");
+        ec2Instance.addUserData("sudo service docker start");
+        ec2Instance.addUserData("sudo usermod -aG docker ec2-user");
+
         // Output the EC2 instance's public DNS
         CfnOutput.Builder.create(this, "WDEc2InstancePublicDns")
                 .value(ec2Instance.getInstancePublicDnsName())
@@ -124,9 +129,6 @@ public class AwsInfraStack extends Stack {
                 .engine(DatabaseInstanceEngine.MYSQL)
                 .instanceType(InstanceType.of(InstanceClass.T4G, InstanceSize.MICRO))  // Free Tier eligible
                 .vpc(vpc)
-                .vpcSubnets(SubnetSelection.builder()
-                        .subnetType(SubnetType.PRIVATE_WITH_EGRESS) // Private subnet selection
-                        .build())
                 .securityGroups(List.of(rdsSecurityGroup))
                 .multiAz(false)  // Free Tier eligible (single-AZ)
                 .allocatedStorage(20)  // Free Tier includes 20GB of storage
@@ -136,6 +138,8 @@ public class AwsInfraStack extends Stack {
                 .publiclyAccessible(false)  // Only accessible from within VPC (for security)
                 .instanceIdentifier("wd-rds-instance")
                 .build();
+
+        rdsInstance.getConnections().allowDefaultPortFrom(ec2Instance.getConnections(), "Allow EC2 to connect to RDS");
 
         // Output the RDS instance endpoint
         CfnOutput.Builder.create(this, "RdsInstanceEndpoint")
