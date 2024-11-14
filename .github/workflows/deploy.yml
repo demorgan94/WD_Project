@@ -118,5 +118,6 @@ jobs:
                 -e RDS_URL=${{ secrets.RDS_URL }} \
                 -e RDS_USERNAME=${{ secrets.RDS_USERNAME }} \
                 -e RDS_PASS=${{ secrets.RDS_PASS }} \
+                -e RDS_DB_NAME=${{ secrets.RDS_DB_NAME }} \
                 ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/${{ secrets.ECR_REPOSITORY }}:latest
             EOF
