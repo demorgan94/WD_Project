@@ -49,6 +49,38 @@ jobs:
             # Add the EC2 host to known hosts
             ssh-keyscan -H ${{ secrets.EC2_PUBLIC_IP }} >> ~/.ssh/known_hosts
 
+      - name: Check if Docker is installed and running 🛠️🐳
+        uses: appleboy/ssh-action@v0.1.6
+        with:
+          host: ${{ secrets.EC2_PUBLIC_IP }}
+          username: ec2-user
+          key: ${{ secrets.EC2_SSH_KEY }}
+          port: 22
+          script: |
+            ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ec2-user@${{ secrets.EC2_PUBLIC_IP }} << 'EOF'
+              # Check if Docker is installed
+              if command -v docker &> /dev/null
+              then
+                echo "Docker is installed!!!"
+              else
+                echo "-----Installing Docker-----"
+                sudo yum install docker -y
+                sudo service docker start
+                sudo systemctl enable docker
+                sudo usermod -aG docker ec2-user
+                sudo service docker restart
+              fi
+            
+              # Check if Docker is running
+              if sudo systemctl is-active --quiet docker
+              then
+                echo "Docker is running!!!"
+              else
+                echo "-----Starting Docker-----"
+                sudo systemctl restart docker
+              fi
+            EOF
+
       - name: Stop existing Docker containers 🛑🐳
         uses: appleboy/ssh-action@v0.1.6
         with:

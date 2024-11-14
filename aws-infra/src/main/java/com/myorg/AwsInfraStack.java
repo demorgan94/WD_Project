@@ -13,6 +13,8 @@ import software.amazon.awscdk.services.ec2.MachineImage;
 import software.amazon.awscdk.services.ec2.Peer;
 import software.amazon.awscdk.services.ec2.Port;
 import software.amazon.awscdk.services.ec2.SecurityGroup;
+import software.amazon.awscdk.services.ec2.SubnetSelection;
+import software.amazon.awscdk.services.ec2.SubnetType;
 import software.amazon.awscdk.services.ec2.UserData;
 import software.amazon.awscdk.services.ec2.Vpc;
 import software.amazon.awscdk.services.ecr.LifecycleRule;
@@ -87,16 +89,18 @@ public class AwsInfraStack extends Stack {
                 .effect(Effect.ALLOW)
                 .build());
 
+        // Commands to install and run Docker on EC2
         UserData userData = UserData.forLinux();
         userData.addCommands(
                 "sudo yum update -y",
-                "sudo amazon-linux-extras install docker",
+                "sudo yum install docker -y",
                 "sudo service docker start",
+                "sudo systemctl enable docker",
                 "sudo usermod -aG docker ec2-user",
-                "sudo chkconfig docker on"
+                "sudo systemctl restart docker"
         );
 
-        // EC2 instance setup for Docker
+        // EC2 instance setup
         Instance ec2Instance = Instance.Builder.create(this, "WDEc2Instance")
                 .vpc(vpc)
                 .instanceType(InstanceType.of(InstanceClass.BURSTABLE2, InstanceSize.MICRO)) // Free tier eligible
@@ -105,6 +109,7 @@ public class AwsInfraStack extends Stack {
                 .role(ec2Role)
                 .keyPair(KeyPair.fromKeyPairName(this, "WDEc2KeyPair", "wd-ec2-key-pair"))
                 .associatePublicIpAddress(true)
+                .vpcSubnets(SubnetSelection.builder().subnetType(SubnetType.PUBLIC).build())
                 .userData(userData)
                 .build();
 
