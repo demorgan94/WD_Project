@@ -13,8 +13,7 @@ import software.amazon.awscdk.services.ec2.MachineImage;
 import software.amazon.awscdk.services.ec2.Peer;
 import software.amazon.awscdk.services.ec2.Port;
 import software.amazon.awscdk.services.ec2.SecurityGroup;
-import software.amazon.awscdk.services.ec2.SubnetSelection;
-import software.amazon.awscdk.services.ec2.SubnetType;
+import software.amazon.awscdk.services.ec2.UserData;
 import software.amazon.awscdk.services.ec2.Vpc;
 import software.amazon.awscdk.services.ecr.LifecycleRule;
 import software.amazon.awscdk.services.ecr.Repository;
@@ -88,6 +87,15 @@ public class AwsInfraStack extends Stack {
                 .effect(Effect.ALLOW)
                 .build());
 
+        UserData userData = UserData.forLinux();
+        userData.addCommands(
+                "sudo yum update -y",
+                "sudo amazon-linux-extras install docker",
+                "sudo service docker start",
+                "sudo usermod -aG docker ec2-user",
+                "sudo chkconfig docker on"
+        );
+
         // EC2 instance setup for Docker
         Instance ec2Instance = Instance.Builder.create(this, "WDEc2Instance")
                 .vpc(vpc)
@@ -97,13 +105,8 @@ public class AwsInfraStack extends Stack {
                 .role(ec2Role)
                 .keyPair(KeyPair.fromKeyPairName(this, "WDEc2KeyPair", "wd-ec2-key-pair"))
                 .associatePublicIpAddress(true)
-                .vpcSubnets(SubnetSelection.builder().subnetType(SubnetType.PUBLIC).build())
+                .userData(userData)
                 .build();
-
-        ec2Instance.addUserData("sudo yum update -y");
-        ec2Instance.addUserData("sudo yum install -y docker");
-        ec2Instance.addUserData("sudo service docker start");
-        ec2Instance.addUserData("sudo usermod -aG docker ec2-user");
 
         // Output the EC2 instance's public DNS
         CfnOutput.Builder.create(this, "WDEc2InstancePublicDns")
