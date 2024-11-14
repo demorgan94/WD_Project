@@ -71,6 +71,7 @@ public class AwsInfraStack extends Stack {
                 .build();
         ec2SecurityGroup.addIngressRule(Peer.anyIpv4(), Port.tcp(22), "Allow SSH");
         ec2SecurityGroup.addIngressRule(Peer.anyIpv4(), Port.tcp(80), "Allow HTTP");
+        ec2SecurityGroup.addIngressRule(Peer.anyIpv4(), Port.tcp(443), "Allow HTTPS");
 
         // Create IAM Role for EC2 instance
         Role ec2Role = Role.Builder.create(this, "WDEc2InstanceRole")
