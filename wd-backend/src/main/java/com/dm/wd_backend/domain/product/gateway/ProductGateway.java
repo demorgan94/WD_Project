@@ -7,10 +7,9 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface ProductGateway {
-    Product create(Product product);
-    Product update(Product product);
-    void delete(UUID id);
 
+    Product save(Product product);
+    boolean delete(UUID id);
     Optional<Product> findById(UUID id);
     List<Product> findAll();
 }
