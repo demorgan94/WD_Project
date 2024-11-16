@@ -1,5 +1,7 @@
 package com.dm.wd_backend.domain.product.exceptions;
 
+import java.util.UUID;
+
 public class ProductNotFoundException extends RuntimeException {
     public ProductNotFoundException(String message) {
         super(message);
@@ -9,7 +11,7 @@ public class ProductNotFoundException extends RuntimeException {
         super(message, cause);
     }
 
-    public ProductNotFoundException() {
-        super("Product not found");
+    public ProductNotFoundException(UUID id) {
+        super("Product not found with id: " + id);
     }
 }
