@@ -33,16 +33,21 @@ public class ProductDBGateway implements ProductGateway {
         return this.productRepository.save(ProductEntity.fromDomain(product)).toDomain();
     }
 
-    /**
-     * Deletes the product with the given id from the database.
-     *
-     * @param id the id of the product to be deleted
-     * @return true if the product was successfully deleted, false if no product was found with the given id
-     */
+
+
+/**
+ * Deletes a product with the specified id from the database.
+ *
+ * @param id the UUID of the product to be deleted
+ * @return true if the product was successfully deleted, false if no product was found with the given id
+ */
     @Override
     public boolean delete(UUID id) {
-        productRepository.deleteById(id);
-        return this.findById(id).isEmpty();
+        Optional<ProductEntity> productEntity = productRepository.findById(id);
+        return productEntity.map(entity -> {
+            productRepository.deleteById(id);
+            return true;
+        }).orElse(false);
     }
 
     /**
