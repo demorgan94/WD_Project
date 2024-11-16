@@ -37,6 +37,12 @@ public class ProductEntity {
     @Column(nullable = false)
     private Integer quantity;
 
+    /**
+     * Converts a Product domain object to a ProductEntity.
+     *
+     * @param product the Product domain object to convert
+     * @return the corresponding ProductEntity object
+     */
     public static ProductEntity fromDomain(Product product) {
         return ProductEntity.builder()
                 .id(product.getId())
@@ -47,6 +53,11 @@ public class ProductEntity {
                 .build();
     }
 
+    /**
+     * Converts this ProductEntity to the corresponding Product domain object.
+     *
+     * @return the Product domain object
+     */
     public Product toDomain() {
         return Product.builder()
                 .id(id)

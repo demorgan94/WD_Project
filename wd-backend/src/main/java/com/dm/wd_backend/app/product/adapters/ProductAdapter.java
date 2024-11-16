@@ -33,10 +33,12 @@ public class ProductAdapter implements ProductUseCases {
                 .orElseThrow(() -> new ProductNotFoundException(id));
     }
 
+
     /**
      * Find all products.
      *
      * @return a list of all products
+     * @throws ProductsNotFoundException if no products were found
      */
     @Override
     public List<Product> findAllProducts() {
@@ -45,11 +47,13 @@ public class ProductAdapter implements ProductUseCases {
                 .orElseThrow(ProductsNotFoundException::new);
     }
 
+
     /**
-     * Save a product.
+     * Saves a product.
      *
-     * @param product the product to save
-     * @return the saved product
+     * @param product the product to be saved
+     * @return the saved product with any database-generated values populated
+     * @throws ProductNotFoundException if no product with the given id was found after saving
      */
     @Override
     public Product saveProduct(Product product) {
@@ -58,11 +62,12 @@ public class ProductAdapter implements ProductUseCases {
                 .orElseThrow(() -> new ProductNotFoundException(product.getId()));
     }
 
+
     /**
      * Deletes a product by its id.
      *
-     * @param id the UUID of the product to delete
-     * @return true if the product was successfully deleted, false otherwise
+     * @param id the id of the product to be deleted
+     * @return true if the product was successfully deleted, false if no product was found with the given id
      */
     @Override
     public boolean deleteProduct(UUID id) {
