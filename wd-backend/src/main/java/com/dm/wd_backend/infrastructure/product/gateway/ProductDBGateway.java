@@ -26,7 +26,7 @@ public class ProductDBGateway implements ProductGateway {
     @Override
     public Product save(Product product) {
         if (product.getId() != null) {
-            return this.findById(product.getId())
+            this.findById(product.getId())
                     .orElseThrow(() -> new ProductNotFoundException(product.getId()))
                     .updateProduct(product);
         }

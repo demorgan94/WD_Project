@@ -9,11 +9,17 @@ spring:
     hikari:
       connectionTimeout: 30000
   jpa:
-    hibernate:
-      dialect: org.hibernate.dialect.MySQLDialect
-      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+    hibernate.ddl-auto: update
     show-sql: true
     generate-ddl: true
+
+logging:
+  level:
+    root: info
+    org.hibernate: warn
 
 management:
   endpoints:
