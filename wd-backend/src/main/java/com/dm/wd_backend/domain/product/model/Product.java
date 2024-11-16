@@ -22,7 +22,18 @@ public class Product {
         this.quantity = quantity;
     }
 
-    private boolean isValidPrice(double price) {
-        return price > 0;
+    /**
+     * Updates the current product with new values from the given product.
+     *
+     * @param product the product to copy values from
+     * @return a new product with the updated values
+     */
+    public Product updateProduct(Product product) {
+        return Product.builder()
+                .name(product.getName())
+                .description(product.getDescription())
+                .price(product.getPrice())
+                .quantity(product.getQuantity())
+                .build();
     }
 }
