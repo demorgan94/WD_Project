@@ -7,25 +7,33 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.util.UUID;
 
 @Data
 @Entity
 @Table(name = "product")
+@NoArgsConstructor
+@AllArgsConstructor
 @Builder
 public class ProductEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
+
     @Column(nullable = false)
     private String name;
+
     @Column(nullable = false)
     private String description;
+
     @Column(nullable = false)
     private Double price;
+
     @Column(nullable = false)
     private Integer quantity;
 
