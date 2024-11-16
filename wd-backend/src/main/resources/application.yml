@@ -9,11 +9,11 @@ spring:
     hikari:
       connectionTimeout: 30000
   jpa:
-    properties:
-      hibernate:
-        dialect: org.hibernate.dialect.MySQLDialect
-        ddl-auto: update
-      show-sql: true
+    hibernate:
+      dialect: org.hibernate.dialect.MySQLDialect
+      ddl-auto: update
+    show-sql: true
+    generate-ddl: true
 
 management:
   endpoints:
@@ -28,3 +28,5 @@ management:
 
 springdoc:
   show-actuator: true
+  swagger-ui:
+    operationsSorter: alpha
