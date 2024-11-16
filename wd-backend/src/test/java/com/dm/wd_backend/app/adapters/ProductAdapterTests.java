@@ -32,7 +32,7 @@ class ProductAdapterTests {
     private ProductAdapter productAdapter;
 
     @Test
-    void testFindProductById() {
+    void givenExistingProduct_whenFindProductById_thenReturnProduct() {
         // Given
         UUID id = UUID.randomUUID();
         Product product = new Product(id, "name", "description", 10.99, 10);
@@ -46,7 +46,7 @@ class ProductAdapterTests {
     }
 
     @Test
-    void testFindProductByIdNotFound() {
+    void givenNonExistingProduct_whenFindProductById_thenThrowProductNotFoundException() {
         // Given
         UUID id = UUID.randomUUID();
         doReturn(Optional.empty()).when(productGateway).findById(id);
@@ -56,7 +56,7 @@ class ProductAdapterTests {
     }
 
     @Test
-    void testFindAllProducts() {
+    void givenProductsInDatabase_whenFindAllProducts_thenReturnProducts() {
         // Given
         List<Product> products = List.of(
                 new Product(UUID.randomUUID(), "name1", "description1", 10.99, 10),
@@ -72,7 +72,7 @@ class ProductAdapterTests {
     }
 
     @Test
-    void testFindAllProductsNotFound() {
+    void givenNoProductsInDatabase_whenFindAllProducts_thenThrowProductsNotFoundException() {
         // Given
         doReturn(null).when(productGateway).findAll();
 
@@ -81,7 +81,7 @@ class ProductAdapterTests {
     }
 
     @Test
-    void testSaveProduct() {
+    void givenValidProduct_whenSaveProduct_thenReturnSavedProduct() {
         // Given
         Product product = new Product(UUID.randomUUID(), "name", "description", 10.99, 10);
         doReturn(product).when(productGateway).save(any());
@@ -94,7 +94,7 @@ class ProductAdapterTests {
     }
 
     @Test
-    void testSaveProductNotFound() {
+    void givenInvalidProduct_whenSaveProduct_thenThrowProductNotFoundException() {
         // Given
         Product product = new Product(UUID.randomUUID(), "name", "description", 10.99, 10);
         doReturn(null).when(productGateway).save(any());
@@ -104,7 +104,7 @@ class ProductAdapterTests {
     }
 
     @Test
-    void testDeleteProduct() {
+    void givenExistingProduct_whenDeleteProduct_thenReturnTrue() {
         // Given
         UUID id = UUID.randomUUID();
         doReturn(true).when(productGateway).delete(id);
@@ -117,7 +117,7 @@ class ProductAdapterTests {
     }
 
     @Test
-    void testDeleteProductFailed() {
+    void givenNonExistingProduct_whenDeleteProduct_thenReturnFalse() {
         // Given
         UUID id = UUID.randomUUID();
         doReturn(false).when(productGateway).delete(id);
