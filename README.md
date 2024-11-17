@@ -18,6 +18,9 @@ I applied these principals on this project, although it is not a big project, it
 
 Clean architecture suggests to separate the codebase into different layers which interact with each other
 following the *Dependency Rule*, which stands that `Source code dependencies can only point inwards`.
+
+*For more information refer to the original Uncle Bob post: [The Clean Architecture](https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html)*
+
 Let's check the following diagram:
 
 ![img.png](img.png)
@@ -28,6 +31,7 @@ Dependency Rule applies.*
 The diagram above represents the separation of the layers and how they interact between them,
 each layer is responsible for a specific task.
 
+### How I structured this project
 Now, this is how I structured this project to implement clean architecture:
 - **Domain**: This layer is responsible for the enterprise business logic, here I defined the models, 
 exceptions and gateways interfaces that will be used by the outer layer, this layer encapsulates the 
