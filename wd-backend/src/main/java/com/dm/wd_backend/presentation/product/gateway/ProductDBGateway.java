@@ -1,4 +1,4 @@
-package com.dm.wd_backend.infrastructure.product.gateway;
+package com.dm.wd_backend.presentation.product.gateway;
 
 import com.dm.wd_backend.domain.product.exceptions.ProductNotFoundException;
 import com.dm.wd_backend.domain.product.gateway.ProductGateway;

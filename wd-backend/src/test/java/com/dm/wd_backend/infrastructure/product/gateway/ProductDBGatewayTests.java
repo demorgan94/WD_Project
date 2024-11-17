@@ -3,6 +3,7 @@ package com.dm.wd_backend.infrastructure.product.gateway;
 import com.dm.wd_backend.domain.product.model.Product;
 import com.dm.wd_backend.infrastructure.config.database.entities.ProductEntity;
 import com.dm.wd_backend.infrastructure.config.database.repositories.ProductRepository;
+import com.dm.wd_backend.presentation.product.gateway.ProductDBGateway;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
