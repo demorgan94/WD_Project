@@ -70,3 +70,10 @@ cdk deploy
 ./gradlew clean build
 ./gradlew bootRun
 ```
+
+**Important Note:** *This repo uses Github Secrets,
+so if you would like to setup this on your own AWS
+account, you can create a fork of this repo and add
+the corresponding secrets on your account since the
+Github Actions workflow use this secrets to setup and
+deploy to ECR and EC2, also to setup the local DB*
