@@ -59,11 +59,13 @@ and configured:*
 ***
 To run the application, execute the following commands:
 #### Aws CDK
+*Inside `aws-infra` directory*
 ```
 cdk bootstrap
 cdk deploy
 ```
 #### SpringBoot
+*Inside `wd-backend` directory*
 ```
 ./gradlew clean build
 ./gradlew bootRun
